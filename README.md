@@ -49,8 +49,6 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Preview][product-screenshot]](https://p-dennygamingyt.github.io/PD-Editor)
-
 ParadiseEditor is the #1 choice for a free Lua editor. Whether you are using it for a Lua IDE or an exploit, ParadiseEditor should be the first choice for your app. ParadiseEditor not only looks good and is modern, but it's completely free!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
