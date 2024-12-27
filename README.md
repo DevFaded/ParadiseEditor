@@ -2,12 +2,6 @@
 
 
 
-<!-- PROJECT SHIELDS -->
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-
 
 
 <h3 align="center">Paradise Editor</h3>
@@ -19,8 +13,6 @@
     <br />
     <br />
     <a href="https://github.com/DevFaded/ParadiseEditor/issues">Report Bug</a>
-    ·
-        <a href="https://p-dennygamingyt.github.io/PD-Editor/Editor.html">Preview</a>
     ·
     <a href="https://discord.gg/freealts">Discord Server</a>
   </p>
