@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>ParadiseMonaco</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen'>
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+        #container {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <script src="./vs/loader.js"></script>
+    <script>
+        require.config({
+            paths: {
+                'vs': 'vs',
+            }
+        });
+
+        // API
+        var GetText;
+        var SetText;
+        var SetTheme;
+        var SetScroll;
+        var ShowErr;
+        var Refresh;
+
+        // Enablers
+        var SwitchMinimap;
+        var SwitchReadonly;
+        var SwitchRenderWhitespace;
+        var SwitchLinks;
+        var SwitchLineHeight;
+        var SwitchFontSize;
+        var SwitchFolding;
+        var SwitchAutoIndent;
+        var SwitchFontFamily;
+        var SwitchFontLigatures;
+        var AddIntellisense;
+
+        // Variables
+        var editor;
+        var Proposals = [];
+
+        require(['vs/editor/editor.main'], function () {
+            function getDependencyProposals() {
+                let newProposals = [];
+                for (let index = 0; index < Proposals.length; index++) {
+                    const element = Proposals[index];
+                    let newElement = {};
+                    for (const key in element) {
+                        if (key === "__children__") {
+                            continue;
+                        }
+                        newElement[key] = element[key];
+                    }
+                    newProposals.push(newElement);
+                }
+                return newProposals;
+            }
+
+			// default monaco themes
+            monaco.editor.defineTheme('net-theme-light', {
+                base: 'vs',
+                inherit: true,
+                rules: [
+                    { token: 'global', foreground: '000000' },
+                    { token: 'keyword', foreground: '569CD6' },
+                    { token: 'comment', foreground: '669966' },
+                    { token: 'number', foreground: 'B5CEA8' },
+                    { token: 'string', foreground: 'ff8c3a' },
+                ]
+            });
+
+            monaco.editor.defineTheme('net-theme-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: 'global', foreground: 'FFFFFF', fontStyle: "bold" },
+                    { token: 'keyword', foreground: '569CD6', fontStyle: "bold" },
+                    { token: 'comment', foreground: '669966' },
+                    { token: 'number', foreground: 'B5CEA8' },
+                    { token: 'string', foreground: 'CE9178' },
+                ]
+            });
+
+			// exploit themes
+			monaco.editor.defineTheme('PDMonaco', { // some theme i found from github: https://github.com/paysonism/PD-Editor/
+				base: 'vs-dark',
+				inherit: true,
+				rules: [
+					{ token: '', foreground: '#C3CCDB' },
+					{ token: 'variable.language.self', foreground: '#F7768E' },
+					{ token: 'variable.parameter.variadic', foreground: '#F7768E' },
+					{ token: 'variable.parameter.function', foreground: '#E0AF68' },
+					{ token: 'variable.other.constant', foreground: '#FF9E64' },
+					{ token: 'variable.property', foreground: '#7DCFFF' },
+					{ token: 'variable.object.property', foreground: '#73DACA' },
+
+					{ token: 'keyword', foreground: '#BB9AF7' },
+					{ token: 'keyword.local', foreground: '#997BD6', fontStyle: 'italic' },
+					{ token: 'keyword.operator', foreground: '#89DDFF' },
+					{ token: 'keyword.operator.type.annotation', foreground: '#9ABDF5' },
+					{ token: 'keyword.operator.typedef.annotation', foreground: '#89DDFF' },
+					{ token: 'keyword.control.export', foreground: '#997BD6', fontStyle: 'italic' },
+
+					{ token: 'operator', foreground: '#89DDFF' },
+					{ token: 'operator.type', foreground: '#BB9AF7' },
+					{ token: 'operator.special', foreground: '#BB9AF7' },
+
+					{ token: 'entity.name.type.alias', foreground: '#5ab6d6' },
+					{ token: 'entity.name.function', foreground: '#7AA2F7' },
+
+					{ token: 'global', foreground: '#7AA2F7' },
+
+					{ token: 'storage.type', foreground: '#BB9AF7' },
+
+					{ token: 'comment', foreground: '#666666', fontStyle: 'italic' },
+					{ token: 'comment.highlight.title', foreground: '#89DDFF', fontStyle: 'italic' },
+					{ token: 'comment.highlight.name', foreground: '#89DDFF', fontStyle: 'italic' },
+					{ token: 'comment.delimiter.modifier', foreground: '#9ABDF5', fontStyle: 'italic' },
+					{ token: 'comment.highlight.modifier', foreground: '#7DCFFF', fontStyle: 'italic' },
+					{ token: 'comment.highlight.descriptor', foreground: '#F7768E', fontStyle: 'italic' },
+
+					{ token: 'delimiter.longstring', foreground: '#89DDFF' },
+					{ token: 'delimiter.bracket', foreground: '#a6afbd' },
+					{ token: 'delimiter.array', foreground: '#a6afbd' },
+					{ token: 'delimiter.parenthesis', foreground: '#a6afbd' },
+					{ token: 'delimiter', foreground: '#a6afbd' },
+
+					{ token: 'string', foreground: '#9ECE6A' },
+					{ token: 'longstring', foreground: '#9ECE6A' },
+					{ token: 'string.delimeter', foreground: '#89DDFF' },
+					{ token: 'string.escape', foreground: '#89DDFF' },
+
+					{ token: 'punctuation.separator.arguments', foreground: '#9ABDF5' },
+					{ token: 'punctuation.separator.parameter', foreground: '#89DDFF' },
+					{ token: 'punctuation.separator.table', foreground: '#89DDFF' },
+					{ token: 'punctuation.definition.block', foreground: '#9ABDF5' },
+					{ token: 'punctuation.definition.parameters', foreground: '#9ABDF5' },
+					{ token: 'punctuation.definition.typeparameters', foreground: '#89DDFF' },
+
+					{ token: 'constant.language', foreground: '#FF9E64' },
+					{ token: 'number', foreground: '#FF9E64' },
+					{ token: 'constants', foreground: '#FF9E64' },
+
+					{ token: 'support.function', foreground: '#0DB9D7' },
+					{ token: 'support.function.library', foreground: '#0DB9D7' },
+					{ token: 'support.type', foreground: '#5ab6d6' },
+				],
+				colors: {
+					'editor.background': '#262626',
+
+					'editorLineNumber.foreground': '#7A7A7A',
+					'editorLineNumber.activeForeground': '#BBBBBB',
+
+					'editorIndentGuide.background': '#1a1a1a',
+
+					'editorSuggestWidget.background': "#181818",
+					'editorSuggestWidget.border': "#1a1a1a",
+					'editorSuggestWidget.foreground': "#D5D5D5",
+					'editorSuggestWidget.selectedBackground': "#404040",
+					'editorSuggestWidget.highlightForeground': "#18A0FB",
+
+					'textCodeBlock.background': '#181818',
+				}
+			});
+
+			monaco.editor.defineTheme('AtonixMonaco', { // some really old roblox exploit which is discountinued theme
+                base: 'vs-dark',
+                inherit: true,
+                colors: {
+                    'editor.background': '#141414',
+                    "editor.selectionBackground": "#0d284a",
+                    "editor.lineHighlightBackground": "#171717",
+                    "scrollbarSlider.background": "#141414",
+                    "scrollbarSlider.hoverBackground": "#1e1e1e",
+                    'scrollbarSlider.activeBackground': "#1e1e1e"
+                },
+                rules: [
+                    { background: "141414" },
+                    { token: 'global', foreground: '7bd88f' },
+                    { token: 'keyword', foreground: 'fc618d', fontStyle: 'bold' },
+                    { token: 'comment', foreground: '505050', fontStyle: 'italic' },
+                    { token: 'number', foreground: '948ae3' },
+                    { token: 'string', foreground: 'fce566' },
+                ]
+            });
+
+			monaco.editor.defineTheme('ParadiseMonaco', {
+                base: 'vs-dark', 
+                inherit: true, 
+                rules: [
+                    { token: 'comment', foreground: '669966', fontStyle: 'italic' },
+                    { token: 'keyword', foreground: 'c792ea' },
+                    { token: 'variable', foreground: 'f8f8f2' },
+                    { token: 'variable.other.local', foreground: 'f8f8f2' },
+                    { token: 'string', foreground: '80cbc4' },
+                    { token: 'number', foreground: 'ffeb3b' },
+                    { token: 'regexp', foreground: 'd4e157' },
+                    { token: 'operator', foreground: 'ffffff' },
+                    { token: 'identifier', foreground: 'f8f8f2' },
+                    { token: 'delimiter', foreground: 'ffffff' },
+                    { token: 'type', foreground: 'ff9800' },
+                    { token: 'function', foreground: '82aaff' },
+                    { token: 'type.identifier', foreground: 'ff9800' },
+                    { token: 'type.decorator', foreground: 'ff9800' }
+                ],
+                colors: {
+                    'editor.background': '#2e2e2e', 
+                    'editor.foreground': '#f8f8f2', 
+                    'editorCursor.foreground': '#f8f8f2',
+                    'editor.lineHighlightBackground': '#333333', 
+                    'editorLineNumber.foreground': '#6a6a6a',
+                    'editor.selectionBackground': '#6200ea', 
+                    'editor.inactiveSelectionBackground': '#6a00b3',
+                    'editorIndentGuide.background': '#444444',
+                    'editorIndentGuide.activeBackground': '#ffffff',
+                    'editorRuler.foreground': '#444444',
+                    'editorWhitespace.foreground': '#d3d3d3',
+                    'editor.findMatchBackground': '#ff79c6', 
+                    'editor.findMatchHighlightBackground': '#ff79c6',
+                    'editor.wordHighlightBackground': '#ffeb3b',
+                    'editor.wordHighlightStrongBackground': '#ffeb3b'
+                }
+            });
+
+			monaco.editor.defineTheme('SynapseSexMonaco', { // synapSEX theme
+				base: 'vs-dark',
+				inherit: true,
+				rules: [
+					{token: 'keyword', foreground: 'f86d7c', fontStyle: "bold"},
+					{token: 'global', foreground: '84d6f7', fontStyle: "bold"},
+					{token: 'type', foreground: '84d6f7'},
+					{token: 'string', foreground: 'adf195'},
+					{token: 'number', foreground: 'fcc600'},
+					{token: 'operator', foreground: 'ffffff'},
+					{token: 'comment', foreground: '669966'},
+					{token: 'comment.todo', fontStyle: "bold"},
+				],
+				colors: {
+					'editor.background': '#252525',
+					'editor.foreground': '#cccccc',
+				}
+			});
+
+			// now its just normal themes i made!
+			monaco.editor.defineTheme('cyberpunk', {
+                base: 'vs-dark',
+                inherit: true,
+                 rules: [
+                    { token: 'comment', foreground: '808080', fontStyle: 'italic' },
+                    { token: 'keyword', foreground: 'ff00ff' },
+                    { token: 'number', foreground: '00ff00' },
+                    { token: 'string', foreground: '00ffff' },
+                    { token: 'variable', foreground: 'ffff00' },
+                    { token: 'type', foreground: 'ff9900' },
+                    { token: 'function', foreground: 'ff00ff' },
+                    { token: 'parameter', foreground: 'ff6600' },
+                    { token: 'constant', foreground: 'ffcc00' },
+                    { token: 'operator', foreground: 'ff6600' },
+                    { token: 'delimiter', foreground: '999999' },
+                    { token: 'class', foreground: 'ff1493' },
+                    { token: 'type.identifier', foreground: 'ff1493' },
+                    { token: 'variable.other.local', foreground: 'ffff00' },
+                ],
+                colors: {
+                    'editor.background': '#1b1b1b',
+                    'editor.foreground': '#f0f0f0',
+                    'editorCursor.foreground': '#ff00ff',
+                    'editor.lineHighlightBackground': '#333333',
+                    'editor.lineHighlightBorder': '#ff1493',
+                    'editor.selectionBackground': '#ff66cc',
+                    'editor.inactiveSelectionBackground': '#ff66cc80',
+                    'editor.selectionHighlightBackground': '#ffff0070',
+                    'editorIndentGuide.background': '#666666',
+                    'editorIndentGuide.activeBackground': '#ff00ff',
+                    'editorWhitespace.foreground': '#2f2f2f',
+                },
+            });
+
+            require(['vs/basic-languages/monaco.contribution'], function () {
+				monaco.languages.registerCompletionItemProvider('lua', {
+					provideCompletionItems: function (model, position) {
+						return {
+							suggestions: getDependencyProposals(),
+						};
+					},
+					triggerCharacters: ['.', ':', '"'],
+				});
+
+            editor = monaco.editor.create(document.getElementById("container"), {
+                value: [
+                    "--[[ Welcome to SkidExploit",
+                    "   Owned And Developed by Shithead ",
+                    "   Monaco By Faded ",
+                    "--]]",
+                    "",
+                    "print ('Hello, World!')"
+                ].join('\n'),
+                language: "lua",
+                theme: "ParadiseMonaco",
+                folding: true,
+                dragAndDrop: false,
+                automaticLayout: true,
+                links: true,
+                minimap: {
+                    enabled: true,
+                },
+                showFoldingControls: "always",
+                smoothScrolling: true,
+                stopRenderingLineAfter: 6500,
+                cursorBlinking: "smooth",
+                cursorSmoothCaretAnimation: true,
+                foldingHighlight: false,
+                fontLigatures: true,
+                formatOnPaste: true,
+                showDeprecated: true,
+                suggest: {
+                    snippetsPreventQuickSuggestions: false,
+                },
+                padding: {
+                    top: 10,
+                }
+            });
+        });
+
+        window.onresize = function () {
+				editor.layout();
+			}
+
+			Cut = function () {
+				editor.focus();
+				document.execCommand('cut');
+			}
+
+			Copy = function () {
+				editor.focus();
+				document.execCommand('copy');
+			}
+
+			Paste = function () {
+				editor.focus();
+				document.execCommand('paste');
+			}
+
+			Undo = function () {
+				editor.focus();
+				document.execCommand('undo');
+			}
+
+			Redo = function () {
+				editor.focus();
+				document.execCommand('redo');
+			}
+
+			Delete = function () {
+				editor.focus();
+				document.execCommand('delete');
+			}
+
+			SelectAll = function () {
+				editor.focus();
+				document.execCommand('selectAll');
+			}
+
+			GetText = function () {
+				return String(editor.getValue());
+			}
+
+			SetText = function (x) {
+				try {
+					editor.setValue(JSON.parse(`${String(x)}`));
+				} catch (e) {
+					editor.setValue(String(x))
+				}
+			}
+
+			GetProposals = function () {
+				return Proposals;
+			}
+
+
+			OnDidChangeContent = function (callback) {
+				return editor.onDidChangeModelContent((event) => {
+					callback(editor.getValue());
+				});
+			}
+
+			OnDidChangeCursorPosition = function (callback) {
+				return editor.onDidChangeCursorPosition((event) => {
+					callback(event.position);
+				});
+			}
+
+			SetTheme = function (themeName) {
+				if (themeName == 'krnlDark') {
+					monaco.editor.setTheme('krnlDark')
+				}
+				if (themeName == "Dark") {
+					monaco.editor.setTheme("net-theme-dark");
+				}
+				if (themeName == "Light") {
+					monaco.editor.setTheme("net-theme-light");
+				}
+			}
+
+			SwitchMinimap = function (flag) {
+				editor.updateOptions({
+					minimap: {
+						enabled: flag,
+					}
+				});
+			}
+
+			SwitchReadonly = function (flag) {
+				editor.updateOptions({
+					readOnly: flag,
+				});
+			}
+
+			SwitchRenderWhitespace = function (op) {
+				editor.updateOptions({
+					renderWhitespace: op,
+				});
+			}
+
+			SwitchLinks = function (flag) {
+				editor.updateOptions({
+					links: flag,
+				});
+			}
+
+			SwitchLineHeight = function (num) {
+				editor.updateOptions({
+					lineHeight: num,
+				});
+			}
+
+			SwitchFontSize = function (num) {
+				editor.updateOptions({
+					fontSize: num,
+				});
+			}
+
+			SwitchFolding = function (flag) {
+				editor.updateOptions({
+					folding: flag,
+				});
+			}
+
+			SwitchAutoIndent = function (flag) {
+				editor.updateOptions({
+					autoIndent: flag,
+				});
+			}
+
+			SwitchFontFamily = function (name) {
+				editor.updateOptions({
+					fontFamily: name,
+				});
+			}
+
+			SwitchFontLigatures = function (flag) {
+				editor.updateOptions({
+					fontLigatures: flag,
+				});
+			}
+
+			ShowErr = function (line, column, endline, endcolumn, errMessage) {
+				editor.revealPositionInCenter({ lineNumber: line, column: column });
+				editor.deltaDecorations([], [
+					{
+						range: new monaco.Range(line, column, endline, endcolumn),
+						options: {
+							inlineClassName: 'squiggly-error',
+							hoverMessage: {
+								value: errMessage,
+							}
+						},
+					},
+				]);
+			}
+
+			AddSnippet = function (kindName, snippetName, data) {
+				let snippet = {
+					insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+					kind: monaco.languages.CompletionItemKind[kindName],
+				};
+				for (const key in data) {
+					let value = data[key];
+					if (key == "insertText" && typeof value == "object") {
+						value = value.join("\n");
+					};
+					snippet[key] = value;
+				}
+				if (!snippet.label) {
+					snippet.label = snippetName
+				}
+				if (!snippet.insertText) {
+					snippet.insertText = snippetName
+				}
+				Proposals.push(snippet);
+			}
+
+			AddRawSnippet = function (data) {
+				Proposals.push(data);
+			}
+
+			SetScroll = function (line) {
+				editor.revealLineInCenter({ lineNumber: line });
+			}
+
+			Refresh = function () {
+				var text = getText();
+				setText("");
+				editor.trigger('keyboard', 'type', { text: text });
+			}
+
+		});
+	</script>
+</body>
+
+</html>
