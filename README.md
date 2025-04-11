@@ -25,17 +25,13 @@
 
 ParadiseEditor is the #1 choice for a free Lua editor. Whether you are using it for a Lua IDE or an exploit, ParadiseEditor should be the first choice for your app. ParadiseEditor not only looks good and is modern, but it's completely free!
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 ### Built With
 
-* [![HTML]
-* [![JS]
-* [![CSS]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+* HTML
+* JS
+* CSS
 
 
 ### Installation
@@ -44,15 +40,11 @@ ParadiseEditor is the #1 choice for a free Lua editor. Whether you are using it 
 2. Extract the download .ZIP file.
 3. You now have ParadiseEditor!
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ## Acknowledgments
 
 Thanks to all of you that helped me during the development of ParadiseEditor.
 * [Roblox Developer Forums](https://devforum.roblox.com/)
 * [Microsoft](https://microsoft.github.io/monaco-editor/)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
