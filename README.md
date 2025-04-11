@@ -20,32 +20,6 @@
 
 
 
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#config"></a>Config</li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#contact">Credits</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
-
-
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -74,7 +48,7 @@ ParadiseEditor is the #1 choice for a free Lua editor. Whether you are using it 
 
 ## Acknowledgments
 
-Thanks to all of you that helped me during the development of PD-Editor.
+Thanks to all of you that helped me during the development of ParadiseEditor.
 * [Roblox Developer Forums](https://devforum.roblox.com/)
 * [Microsoft](https://microsoft.github.io/monaco-editor/)
 
